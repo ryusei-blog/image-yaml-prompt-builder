@@ -104,3 +104,5 @@ Released under the **MIT License** — see the [`LICENSE`](LICENSE) file for det
 - Coconala: <https://coconala.com/users/4464494>
 
 > *Made with ChatGPT 4o & lots of ☕ by Ryusei Komada*
+
+🇯🇵 日本語版 README → [README.ja.md](README.ja.md)
