@@ -20,7 +20,7 @@
 
 ## 🚀 Quick Start
 
-### 🌐 Live Demo
+### 🌐 Live Demo  
 Feel free to play with the tool online:  
 https://ryusei-blog.github.io/image-yaml-prompt-builder/
 
@@ -28,21 +28,17 @@ https://ryusei-blog.github.io/image-yaml-prompt-builder/
 ```bash
 git clone https://github.com/ryusei-blog/image-yaml-prompt-builder.git
 cd image-yaml-prompt-builder
-open index.html
+open index.html   # macOS / Linux (Windows: double-click index.html)
+```
 
----
-
-## 🖥️ WordPress Integration (optional)
-
-Want to embed the tool in a WordPress site?
-
+### 🖥️ WordPress Integration (optional)
 ```bash
 # inside your theme folder (e.g. /wp-content/themes/affinger/)
 mkdir template
 cp wp-template/image-yaml-prompt-builder.php template/
-
-# create a new page in WP admin and choose this template
 ```
+
+Create a new page in WP admin and choose this template.
 
 The PHP file wraps the same HTML/JS so you can keep WP headers, footers, SEO plugins, etc.
 
