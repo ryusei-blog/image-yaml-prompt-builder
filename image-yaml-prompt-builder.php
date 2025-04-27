@@ -1,0 +1,947 @@
+<?php
+/**
+ * Template Name: Image Generation YAML Prompt Generator
+*/
+?>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>画像生成YAMLプロンプト生成ツール｜RYUSEI BLOG</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+/* ─────────  カラースキーム・基盤  ───────── */
+:root{
+  --primary:#c5484f;
+  --primary-light:#d97379;
+  --bg:#f6f7f9;
+  --card-bg:#ffffff;
+  --shadow:0 2px 6px rgba(0,0,0,.08);
+  --radius:6px;
+  --transition:.25s;
+  --accent:#2196f3;
+  --accent-light:#4ea5f6;
+}
+*{box-sizing:border-box;}
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  margin:0; padding:1.2em;
+  line-height:1.6;
+  background:var(--bg);
+  color:#333;
+}
+
+/* ───── 見出し ───── */
+h1{margin:.2em 0 1.2em;font-size:1.7em;}
+h2,h3{
+  background:var(--primary);
+  color:#fff;
+  padding:.6em 1em;
+  margin:0 0 1em;
+  border-radius:var(--radius);
+}
+h2{font-size:1.4em;}
+h3{font-size:1.1em;}
+/* sticky */
+h2,h3{position:sticky;top:0;z-index:3;}
+
+/* ───── レイアウト ───── */
+.container{display:flex;gap:1.2em;}
+.left-panel{flex:0 0 60%;}
+.right-panel{flex:0 0 40%;position:sticky;top:0;height:fit-content;}
+@media(max-width:768px){
+ .container{flex-direction:column;}
+ .left-panel,.right-panel{flex:1 1 100%;}
+}
+
+/* ───── セクションカード ───── */
+.section{
+  background:var(--card-bg);
+  border-radius:var(--radius);
+  padding:1em;
+  margin-bottom:1.2em;
+  box-shadow:var(--shadow);
+}
+.indent{margin-left:1em;}
+
+/* ───── input UI ───── */
+.checkbox-list label{
+  display:flex;align-items:center;gap:.6em;
+  margin:.25em 0;
+  cursor:pointer;
+  transition:color var(--transition);
+}
+.checkbox-list input{accent-color:var(--primary);}
+.checkbox-list label:hover{color:var(--primary-light);}
+
+/* 画像サムネ（構図など） */
+.composition-image{
+  width:140px;object-fit:cover;margin-left:auto;border-radius:var(--radius);
+  box-shadow:0 1px 3px rgba(0,0,0,.07);
+}
+@media(max-width:768px){.composition-image{width:100px;}}
+
+/* ───── details 折りたたみ ───── */
+details{margin:.6em 0;border:1px solid #ddd;border-radius:var(--radius);background:#fafafa;}
+details[open]{background:#fff;box-shadow:var(--shadow);}
+details summary{
+  list-style:none;cursor:pointer;font-weight:700;
+  position:relative;padding:.6em 1em;
+}
+details summary::after{
+  content:"⯈";position:absolute;right:.8em;transition:transform var(--transition);
+}
+details[open] summary::after{transform:rotate(90deg);}
+details summary::-webkit-details-marker{display:none;} /* safari */
+
+/* ───── ボタン ───── */
+.btn,button{
+  background:var(--accent);color:#fff;border:none;
+  padding:.5em 1em;font-weight:700;border-radius:var(--radius);
+  cursor:pointer;transition:background var(--transition);
+}
+.btn:hover,button:hover{background:var(--accent-light);}
+.buttons{margin-top:1em;display:flex;gap:.6em;}
+
+/* フローティング生成 */
+#floatingGenerateBtn{
+  position:fixed;bottom:1.2em;right:1.2em;
+  width:64px;height:64px;border-radius:50%;
+  font-size:1.2em;display:none;align-items:center;justify-content:center;
+  box-shadow:var(--shadow);
+}
+@media(max-width:768px){#floatingGenerateBtn{display:flex;}}
+
+/* テキストエリア */
+textarea{
+  width:100%;height:260px;margin-top:1em;
+  font-family:monospace;border:1px solid #ccc;border-radius:var(--radius);
+  padding:.8em;background:#fff;
+}
+
+/* スクロール追従ヘッダー */
+#sticky-header{
+  position:sticky;top:0;z-index:999;background:#fff;
+  border-bottom:1px solid #ccc;padding:.8em 1em;font-weight:700;
+  display:none;
+}
+
+/* ───── 追加セクションボタン ───── */
+.add-section-buttons{
+    display:flex;flex-wrap:wrap;gap:.6em;
+    margin:.8em 0;
+  }
+  .add-btn{
+    background:var(--accent);
+    color:#fff;font-weight:700;
+    padding:.4em .9em;border:none;border-radius:var(--radius);
+    cursor:pointer;transition:.25s;
+  }
+  .add-btn:hover{background:var(--accent-light);}
+  /* ON (=展開中) ボタン色 */
+  .add-btn.active{background:var(--primary);}
+  .add-btn.active:hover{background:var(--primary-light);}
+  /* 全クリアボタン */
+  .btn-clear{background:#f44336;}
+  .btn-clear:hover{background:#f66557;}
+
+  h4{font-size:1em;background:#eee;padding:.4em 1em;border-radius:var(--radius);margin:.6em 0;}
+/* toggleable h4 (art‑style categories) */
+h4.toggleable{
+  cursor:pointer;
+  position:relative;
+  padding-left:1.4em;   /* space for arrow */
+}
+h4.toggleable::before{
+  content:"⯈";
+  position:absolute;
+  left:.4em;top:50%;
+  transform:translateY(-50%);
+  transition:transform var(--transition);
+}
+h4.toggleable.open::before{
+  transform:translateY(-50%) rotate(90deg);
+}
+
+/* ───── AD banner ───── */
+.ad-banner{
+  display:block;
+  width:70%;                /* 右パネル幅いっぱい */
+  height:auto;               /* 縦横比を保持 */
+  margin:1.5em auto 0;  /* ←左右を auto にするだけで中央寄せ */
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  object-fit:cover;          /* 万一固定高さを与えた時にトリミング */
+}
+
+  /* ───── チュートリアルボックス ───── */
+  .tutorial-box{
+  background:var(--card-bg);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:1.2em 1.4em;
+  margin:1.2em 0;
+  text-align:left;   /* 左寄せ */
+}
+
+/* 内部セクション区切り */
+.tutorial-box section{
+  padding:.6em 0;
+  border-bottom:1px solid #eee;
+}
+.tutorial-box section:last-of-type{border:none;}
+
+/* 番号付き手順 */
+.steps{
+  margin:.6em 0 1em 1.4em;
+  counter-reset:step;
+}
+.steps li{
+  list-style:none;
+  margin:.4em 0;
+  position:relative;
+  padding-left:2.6em;
+}
+.steps li::before{
+  counter-increment:step;
+  content:counter(step);
+  width:1.6em;
+  height:1.6em;
+  background:#e0e0e0;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  position:absolute;
+  left:0;
+  top:0;
+}
+
+/* FAQ */
+.faq dt{font-weight:700;color:var(--primary);}
+.faq dd{margin:0 0 .8em .6em;color:#555;}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+ <!-- ───── 左パネル ───── -->
+ <div class="left-panel">
+   <div id="sticky-header"></div>
+
+   <h1>画像生成YAMLプロンプト生成専用ツール</h1>
+
+   <!-- 追加セクション一覧 -->
+   <h3>ボタンを押してセクションを追加</h3>
+   <div class="section">
+     <div id="sectionList" class="add-section-buttons">
+        <button type="button" class="add-btn" data-section="aspect_ratio">縦横比</button>
+        <button type="button" class="add-btn" data-section="reference_match">参照画像との一致</button>
+        <button type="button" class="add-btn" data-section="color">カラー</button>
+        <button type="button" class="add-btn" data-section="text_overlay">挿入テキスト</button>
+        <button type="button" class="add-btn" data-section="scene">設定・シーン</button>
+        <button type="button" class="add-btn" data-section="composition">構図</button>
+        <button type="button" class="add-btn" data-section="art_style">アートスタイル</button>
+      </div>
+    </div>
+    <!-- ───── チュートリアル ───── -->
+    <div id="tutorialBox" class="tutorial-box">
+        <h4>💡 チュートリアル</h4>
+      
+        <!-- はじめに -->
+        <section>
+          <p>まずは上のボタンで「縦横比」や「構図」などを押して…⇩</p>
+        </section>
+      
+        <!-- 操作手順 -->
+        <section>
+          <ol class="steps">
+            <li>左パネルで各項目を入力またはチェック</li>
+            <li>右パネルの <em>生成</em> ボタンをクリック</li>
+            <li>生成された YAML をコピーして ChatGPT へ貼り付け</li>
+          </ol>
+        </section>
+      
+        <!-- Q & A -->
+        <section>
+          <dl class="faq">
+            <dt>Q. YAML（ヤムル）とは？</dt>
+            <dd>A. 読み書きしやすい階層型データ記述フォーマットです。</dd>
+            <dt>Q. なぜ YAML プロンプト？</dt>
+            <dd>A. 構図・色・スタイルを階層的に整理でき、AI が誤読しにくいからです。</dd>
+          </dl>
+        </section>
+      
+        <p class="note">※ セクションを1つでも展開すると本チュートリアルは自動で閉じます。展開を全て戻すか、ページ再読み込みをすることでまたこのチュートリアルは表示されます。</p>
+      </div>
+
+</div><!-- /left-panel -->
+
+ <!-- ───── 右パネル ───── -->
+ <div class="right-panel">
+   <div class="buttons">
+     <button id="generateBtn" class="btn">生成</button>
+     <button id="copyBtn" class="btn">コピー</button>
+     <button id="clearBtn" class="btn btn-clear">全クリア</button>
+   </div>
+   <textarea id="output" placeholder="ここにYAMLが出力されます…" readonly></textarea>
+   <img src="https://ryusei-komada.com/wp-content/uploads/2025/04/468c2a0d0fbc3d259b176b45d5c467da.webp"
+     alt="スポンサーリンク" class="ad-banner">
+ </div>
+</div><!-- /container -->
+
+<!-- フローティング -->
+<button id="floatingGenerateBtn" class="btn">生成</button>
+
+<!-- ───── JS (file2 + α) ───── -->
+<script>
+
+/* チュートリアル表示を制御する関数 */
+function updateTutorialVisibility(){
+  const tut = document.getElementById("tutorialBox");
+  if(!tut) return;               // DOM に無い場合は無視
+  const anyActive = document.querySelector('#sectionList .add-btn.active');
+  tut.style.display = anyActive ? "none" : "";
+}
+
+/* ========== 動的セクション定義 (例: 構図) ========== */
+const dataMap={
+
+  composition:[
+   {label:"クローズアップ",path:"close_up",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/e8238afce4a542ea9d1d9eb9f6a350c0.webp",note:"被写体を画面いっぱいに捉え、質感や表情の細部まで強調して視線を集中させる近接構図。"},
+   {label:"ハーフボディ",path:"half_body",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/42a70b2ed13d0303353f4474f941f8b2.webp",note:"頭から腰までを切り取り、人物の服装やポーズを程良く見せつつ表情にも焦点を当てる半身構図。"},
+   {label:"フルボディ",path:"full_body",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/7c5de0421b02e4e306f863562a6196fa.webp",note:"立ち姿や動作を含め全身を収め、シルエットと背景との関係性を示すスケール感豊かな構図。"},
+   {label:"ダイナミックアングル",path:"dynamic_angle",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/fb7cd6eb038eb7f7cdf419c6ae007c29.webp",note:"斜めや極端な視点を用いて奥行きと動きを演出し、ドラマチックな緊張感を高めるダイナミック構図。"},
+   {label:"トップダウンビュー",path:"top_down_view",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/25bce8c5be93cbc9ac9b466126d1fbb7.webp",note:"高所から見下ろす鳥瞰視点で空間全体を俯瞰し、被写体の相対的な位置や広がりを強調する構図。"},
+   {label:"ボトムアップビュー",path:"bottom_up_view",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/5236e23fdfd8de1111521a360cee23bb.webp",note:"低い位置から見上げて撮影し、被写体を威圧的または雄大に見せ、迫力あるスケール感を与える構図。"},
+   {label:"三分割法",path:"rule_of_thirds",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/3cf5a69c71de68f42dba58c6c6b1c228.webp",note:"画面を縦横それぞれ三分割し、交点やライン上に主題を配置する方法。視覚的にバランスが良く、自然な構図を作りやすい。"},
+   {label:"中心配置",path:"centered_composition",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/3bb405137896bdeb1af09e14f3ef515d.webp",note:"主題を画面の中心に配置する構図。対称性や安定感を強調でき、シンプルで力強い印象を与える。"},
+   {label:"不均衡",path:"imbalance",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/23f64fbe108a8c1592b9033cd5c9fdc1.webp",note:"意図的にバランスを崩した構図。緊張感や動きを表現するのに有効で、視覚的な興味を引きやすい。"},
+   {label:"負のスペース",path:"negative_space",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/d48a8d49979575f29d188cb3bbb82571.webp",note:"主題の周囲に広がる空間。余白を効果的に使うことで、主題を強調し、作品に呼吸するような余裕を与える。"},
+   {label:"大小比較",path:"scale_and_proportion",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/4566c52de99647d1589871b5ca12bd58.webp",note:"異なる大きさの要素を組み合わせることで、視覚的な興味や対比を生み出す。主題と背景の関係性を明確にするのに役立つ。"},
+   {label:"リーディングライン",path:"leading_lines",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/429a6213221edf54cd911e8c83dd80b2.webp",note:"視線を特定の方向に誘導する線。道路や川などの自然なラインを利用することで、視覚的なストーリーを強調する。"},
+   {label:"S字カーブ",path:"s_curve",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/669751060024cb24198ba7ef57596a97.webp",note:"画面内にS字のカーブを描く構図。流れるような動きを作り出し、視覚的に心地よいリズムを提供する。"},
+   {label:"シンメトリー",path:"symmetry",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/dc1f6fb6c471533631d639c569d7245b.webp",note:"左右対称の構図。均衡と調和を強調し、視覚的に安定した印象を与える。"},
+   {label:"パターンとテクスチャ",path:"patterns_and_textures",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/63049881295748883da5156a46b25fbe.webp",note:"繰り返しの模様や質感を利用する構図。視覚的な興味を引き、作品に深みとディテールを加える。"},
+   {label:"繰り返し",path:"repetition",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/c15118595d0e08449d928a73dd373a70.webp",note:"同じ要素を繰り返し使う構図。視覚的なリズムを生み出し、一貫性と統一感を強調する。"},
+   {label:"フレーミング",path:"framing",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/2dec9ad8cf12b043df96933c1fc3f1df.webp",note:"自然の要素や人工の構造物を使って、主題を囲む構図。視線を特定のポイントに誘導し、主題を強調する。"},
+   {label:"階層構図",path:"Layering",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/5993c82f70caaf277db526027239a6e0.webp",note:"複数の層を使って深みを作る構図。前景、中景、背景を組み合わせることで、空間の広がりを表現する。"},
+   {label:"奥行きの強調",path:"depth",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/ba49dd16d03506264617d5515e1c84b8.webp",note:"遠近法や重なりを利用して、画面に奥行きを持たせる方法。立体感を強調し、視覚的に豊かな作品を作る。"},
+   {label:"点の配置",path:"spot_and_space",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/68aff3b84c2734f0db5650fd1bb3fd85.webp",note:"小さな点を広い空間に配置する構図。シンプルで効果的に主題を強調し、視覚的なバランスを作る。"},
+   {label:"シルエット",path:"silhouette",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/4746fbfecfa896f1d61b31cbc0f3f5c4.webp",note:"被写体を影絵のように表現する方法。シンプルな形状が際立ち、強いコントラストで視覚的なインパクトを与える。"},
+   {label:"カラーの対比",path:"color_contrast",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/71a677e3174840f25c186dff56ee5f60.webp",note:"対照的な色を組み合わせる構図。色の違いを強調し、視覚的な興味を引きやすくする。"},
+   {label:"隠れた要素",path:"hidden_elements",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/e32ea383bbeeb17443fe41190c117b91.webp",note:"フレーム内に別のフレームを設ける方法。視覚的なサプライズを作り出し、複雑で興味深い構図を提供する。"},
+   {label:"ジャンプカット",path:"juxtaposition",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/87d618d19afebd92ebde46199036a318.webp",note:"異なる要素を並べて配置する構図。対比を強調し、視覚的な衝撃や意味深いストーリーを生み出す。"},
+   {label:"繋がり",path:"connection",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/1fcc31622bee01adde0fe611281f61cb.webp",note:"被写体間の視覚的な関係を強調する方法。線や形、色などを使って、視覚的な連続性を持たせる。"},
+   {label:"オーバーザショルダー",path:"over_the_shoulder",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/36189ddb10d00238e161d548645405fe-1.webp",note:"被写体の肩越しに撮影する構図。視点を共有し、親密感やストーリー性を強調する。"},
+   {label:"アイレベル",path:"eye_level",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/82b4b5e8f991cf407beb6ea6dfaa941b.webp",note:"人間の目の高さで撮影する視点。自然で親しみやすい視点を提供し、被写体と同じ目線で対話する感覚を生む。"},
+   {label:"バードビュー",path:"birds_eye_view",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/3c1fad45217e207505347929427d7d79.webp",note:"上空から見下ろす視点。広範囲の風景を捉え、全体像を把握するのに有効。"},
+   {label:"ワームズアイビュー",path:"worms_eye_view",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/cdf619791f858d643bcd2d75ad3d099c.webp",note:"地面近くから見上げる視点。被写体を強調し、力強さや威圧感を与える。"},
+   {label:"斜め視点",path:"dutch_angle",image:"https://ryusei-komada.com/wp-content/uploads/2024/05/3b6ea2d7d383ad7de632ea8fa728a39e.webp",note:"カメラを斜めに傾けて撮影する視点。緊張感や不安定感を作り出し、視覚的なドラマを強調する。"}
+  ]
+  ,
+  art_style: {
+    /* ───────── 伝統的な画材・手法 ───────── */
+    "伝統的な画材・手法": [
+      { label: "鉛筆",path: "Pencil Drawing",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/629acaa1d7f1cb4ee2d0d0faf1ddb612.webp",note:"鉛筆を使った描画技法。繊細な線や陰影を駆使して、詳細なデッサンを作成するのに適している。鉛筆の硬度を変えることで、異なる質感やトーンを表現できる。"},
+      { label: "色鉛筆",path: "Color Pencil Drawing",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/14c36dc2284bf705107fc8a7ee53342e.webp",note:"色鉛筆を用いた描画技法。色の重ね塗りやブレンドによって豊かなカラーバリエーションを実現し、鮮やかで生き生きとした作品を作成できる。"},
+      { label: "油絵",path: "Oil Painting",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/e3f8af5fa4f32a6f45e4c58528c5211c.webp",note:"油性の絵具を使用する技法。豊かな質感と深みのある色彩が特徴。"},
+      { label: "水彩画",path: "Watercolor",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/e70fa19a2f3c37e0bcdf5d7421f2cb5e.webp",note:"水溶性の絵具を使った描画技法。透明感があり、軽やかなタッチで描かれる。色の混ざりやにじみを活かした独特の表現が可能。"},
+      { label: "薄い水彩画",path: "Light Watercolor",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/834b1cc45dad357cc242171d1d8313d0.webp",note:"通常の水彩画よりも淡く軽やかな色使いを特徴とする技法。柔らかで繊細な表現を得意とし、軽やかな雰囲気を持つ作品に仕上がる。"},
+      { label: "アクリル",path: "Acrylic",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/05c9db549e814a6cdca05b07d9717d66.webp",note:"アクリル絵具を使った描画技法。速乾性があり、厚塗りから薄塗りまで幅広い表現が可能。耐水性があるため、長期保存にも適している。"},
+      { label: "ガッシュ",path: "Gouache",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/25faf99ea3a2433b09122944887b98a5.webp",note:"不透明な水溶性絵具を使った技法。マットで鮮やかな色彩が特徴。スターやイラストに適している。"},
+      { label: "パステル",path: "Pastel",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/b4cc6c5e86deb1577cab3f9021044f65.webp",note:"粉末状の顔料を固めたパステルを使った描画技法。柔らかいタッチで色を重ねやすく、ぼかしや混色も容易。独特の質感と鮮やかな発色が特徴。"},
+      { label: "ペンとインク",path: "Pen & Ink",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/a02e13d4317eeb4be35bca37c181e960.webp",note:"ペンとインクを使用した描画技法。細かい線画や点描など、緻密で詳細な表現が得意。黒インクを主体とすることが多いが、カラフルなインクも使用される。"},
+      { label: "インク",path: "Ink Drawings",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/2855114644eb1e3d1c6f0037e75fca31.webp",note:"インクを使った描画技法。濃淡や線の強弱を駆使して、独特の表現力を発揮する。細密画から抽象画まで幅広く対応できる。"},
+      { label: "カリグラフィ",path: "Calligraphy",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/eb3276559e5a63f15d6c78c4750ec1ea.webp",note:"美しい文字を書く技法。筆やペンを用いて、装飾的かつ芸術的な文字を描く。書道やロゴデザインなど、文字そのものをアートとして扱う。"},
+      { label: "木炭画",path: "Charcoal",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/2c4968f6bded286ebeae692ffb85e425.webp",note:"木炭を用いた描画技法。濃淡の調整が容易で、ダイナミックなタッチと深い陰影が特徴。素早く描写できるため、スケッチやデッサンに適している。"},
+      { label: "クレヨン",path: "Crayon",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/73eccf97bb0460515e8f61340ccf41b1.webp",note:"クレヨンを使った描画技法。子供から大人まで楽しめる、明るくカラフルな表現が特徴。簡単に扱え、重ね塗りやぼかしも可能。"},
+      { label: "スケッチ",path: "Sketch",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/d11e85454340a9ded252d7a416a79eca.webp",note:"鉛筆やペンで素早く描く下絵風タッチ。線の勢いやラフな陰影でアイデアと雰囲気を示す。"},
+      { label: "黒板アート",path: "Chalk Artwork",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/f96b60df809f31cd680b6d62ee0ba8d4.webp",note:"チョークを使って黒板に描かれるアート。学校やカフェのメニューボードなどで見かけることが多く、独特の風合いと親しみやすさがある。"},
+      { label: "フレスコ画",path: "Fresco",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/81f6ce02509548dc7782155a870b84b5.webp",note:"湿った石膏に顔料を塗る技法。古代ローマやルネサンス時代に広く使われ、壁画として長期間保存される。"},
+      { label: "明暗法",path: "Chiaroscuro",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/63954bd9c335ea52c408bf9388481ea5.webp",note:"光と影を強調して立体感を出す技法。特にバロック時代に好まれ、劇的な効果を生み出す。"},
+      { label: "線画",path: "Line Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/9d9e6bd95f905e31423c46d5e63dd829.webp",note:"線だけを使って描かれるアート。シンプルな表現ながら、緻密なデザインや構図の美しさが引き立つ。"},
+      { label: "静物画",path: "Still Life Picture",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/4161aa219274263fa03c19f3bbf8a0cd.webp",note:"無生物を描く絵画の一ジャンル。果物や花、器物などを題材にし、構図や光の表現が重視される。"}
+    ],
+
+    /* ───────── デジタル・現代技法 ───────── */
+    "デジタル・現代技法": [
+      { label: "ピクセルアート",path: "Pixel Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/45fa99736d57b70ea62da2802cc2e370.webp",note:"低解像度のドットを並べるレトロゲーム風スタイル。色数制限と格子状ピクセルが特徴。"},
+      { label: "3Dレンダー",path: "3D Render",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/7c7dfda04370a270c2fddc08791cddb6.webp",note:"3Dソフトで光と質感を計算した画像。リアルからスタイライズまで立体表現が自在。"},
+      { label: "3Dイラスト",path: "3D Illustration",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/2b5628b0beb73feb65a18164683b233a.webp",note:"三次元のデジタル技術を用いて作成されるイラスト。3Dモデリングソフトを使って、立体的でリアルなイラストを作成する。"},
+      { label: "デジタルイラスト",path: "Digital Illustration",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/51c35c1244ac39216aa4eb2f6d952cfb.webp",note:"コンピュータを使った描画技法。グラフィックソフトを使用して、デジタルペイントやドローイングを行う。修正が容易で、多彩な表現が可能。"},
+      { label: "コラージュ",path: "Collage",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/c0ce837df0a48a6fd2633ec20b2070f5.webp",note:"異なる素材を組み合わせて一つの作品を作る技法。紙片、布、写真などを切り貼りして、ユニークで多層的な表現を行う。"},
+      { label: "モザイク",path: "Mosaic",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/2f3606c3398c2dbecdeb44cac2fb9781.webp",note:"小さなタイルやガラス片を並べて絵や模様を作る技法。古代から伝わる技術で、色鮮やかで耐久性のある作品が特徴。"},
+      { label: "ミックスメディア",path: "Mixed Media",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/f7d2e2fb490c5c62b9c0118045b56679.webp",note:"複数の異なる素材や技法を組み合わせて作るアート。多様な表現が可能で、創造性を発揮できる。"},
+      { label: "二重露光",path: "Double Exposure",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/b159b20f39a555edb03811bde7d77531.webp",note:"二重に露光させて撮影する写真技法。異なるシーンやイメージを重ね合わせて、幻想的で創造的な作品が生まれる。"},
+      { label: "美術写真",path: "Fine Art Photography",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/7c32cf064f21b9b313a200270e8a5f10.webp",note:"芸術性を重視した写真技法。被写体の美しさやコンセプト、構図にこだわり、写真そのものがアート作品として評価される。"},
+      { label: "写真",path: "Photo",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/39731b063c3115c24c07efa322e48aa7.webp",note:"カメラを使って撮影された画像。現実の一瞬を捉える手段として、ドキュメンタリーやアート、ファッションなど多様なジャンルがある。"},
+      { label: "ロゴ",path: "Logo",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/94ece7e6f0c79d379f30ba47a680f0c8.webp",note:"企業やブランドのシンボルを表現するデザイン。簡潔で覚えやすく、ブランドのアイデンティティを伝える役割を果たす。"}
+    ],
+
+    /* ───────── アニメ・マンガ・イラスト ───────── */
+    "アニメ・マンガ・イラストスタイル": [
+      { label: "日本アニメスタイル",path: "japan Anime Style",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/8f01e19457bdea3247d4aa60038c5c0f.webp",note:"セル塗りや誇張表情を特徴とする日本アニメ調のカラフルでデフォルメされた描画。"},
+      { label: "セルアニメ",path: "Cel Anime",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/b2be00fa1da10f559ef13d4431f92a19.webp",note:"手描きのセルに色を塗り、1枚ずつ撮影して作成されるアニメーション。伝統的なアニメ制作技法で、多くのクラシックアニメがこの方法で作られた。"},
+      { label: "2Dアニメ",path: "2D Anime",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/f1d3df9cd22414196bae3f35b1eb680c.webp",note:"平面のキャラクターや背景を用いたアニメーション。デジタル技術の発展により、手描きとデジタルの両方の要素を取り入れた作品が増えている。"},
+      { label: "チビアニメ",path: "Chibi Anime",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/ab4c487c538f0d358a32d8a720a4bfde.webp",note:"キャラクターを小さくデフォルメして描くスタイル。かわいらしい外見が特徴で、コメディシーンやパロディ作品に多く使われる。"},
+      { label: "漫画",path: "Manga",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/5dcf8bfb0236e40a006b91bbd556114c.webp",note:"日本発祥のコミックスタイル。独自のストーリーテリングと視覚的表現が特徴。多様なジャンルが存在する。"},
+      { label: "ポップ漫画",path: "Pop Manga",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/e8f64628d9a4ee0cc7591bbfaa51c520.webp",note:"ポップアートの要素を取り入れた漫画スタイル。明るくカラフルな表現が特徴で、ユーモアや風刺を含むことが多い。"},
+      { label: "コミック（西洋）",path: "Comic",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/00880e92e39f015c3bbb970e93872f90.webp",note:"西洋のコミックブックスタイル。スーパーヒーローやファンタジー、アクションなど多彩なジャンルが存在する。"},
+      { label: "キャラクターデザイン",path: "Character Design",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/bba1344d47463e6bc7a0f951d9509771.webp",note:"アニメやゲーム、漫画などのキャラクターをデザインする技法。個性豊かで魅力的なキャラクターを生み出すことが求められる。"},
+      { label: "1970年代風イラスト",path: "1970s Illustration",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/af078d915377b21ff28d6f6e942f8dd1.webp",note:"1970年代のデザインスタイルを反映したイラストレーション。サイケデリックな色使いやグラフィックが特徴。"},
+      { label: "1980年代風イラスト",path: "1980s Illustration",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/d1bf593c2c263c2e07bdcdf992a2ab01.webp",note:"1980年代のポップカルチャーやデザインを反映したイラストレーション。派手な色使いやレトロなデザインが特徴。"},
+      { label: "クリーン・ブラッシュ・ストローク",path: "Clean Brush Stroke",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/5fc64ec7e3c0bdfd7ef6be44450eecff.webp",note:"滑らかで洗練された筆致を持つイラストレーション。シンプルかつ美しい仕上がりが特徴。"},
+      { label: "リアリスティックイラスト",path: "Realistic Illustration",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/74493a045371fe94d4555d7ab996c9ca.webp",note:"現実の物体や人物をリアルに描写するイラストレーション。高い描写力と観察力が求められる。"},
+      { label: "シンプルイラスト",path: "Simple Illustration",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/c67ed27eabbf41576824d57d35e965d9.webp",note:"シンプルなラインや形状を用いたイラストレーション。ミニマルなデザインで、伝えたい内容を明確に表現する。"},
+      { label: "カリカチュア",path: "Caricature",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/0203b6572411682f3d35d616429907e2.webp",note:"特徴を誇張して描く風刺画。人物の個性的な特徴を強調し、ユーモラスな表現が特徴。"},
+      { label: "ピクサー風",path: "Pixar Style",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/6da9ecc084f521ea456c01562f1628cf.webp",note:"ピクサー・アニメーション・スタジオの3DCGアニメーションに見られるスタイル。丸みを帯びたキャラクターデザイン、リアルな質感表現、色彩豊かな世界観が特徴。"},
+      { label: "ジブリ風",path: "Ghibli Style",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/ff12825587aa3e5164ea95435010987e.webp",note:"柔らかな色彩と温かみのある手描き風で、自然や幻想を繊細に描写するスタイル。"}
+    ],
+
+    /* ───────── モダン・抽象・前衛 ───────── */
+    "モダン・抽象・前衛アート": [
+      { label: "印象派",path: "Impressionism",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/e91b4413f293797e06f76d825c239644.webp",note:"19世紀末にフランスで生まれた芸術運動。光と色の表現を重視し、瞬間の印象を捉えることが特徴。モネやルノワールが代表的な画家。"},
+      { label: "キュービズム",path: "Cubism",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/01c9d66ef69e3ac304a20487ffc41e3f.webp",note:"ピカソとブラックによって創始された20世紀初頭の芸術運動。物体を幾何学的な形に分解し、複数の視点から同時に表現する。"},
+      { label: "シュルレアリズム",path: "Surrealism",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/a8cbb585c8c910af8c0eb7e8c44a0b50.webp",note:"1920年代に始まった芸術運動。夢や無意識の世界を表現し、超現実的なイメージを追求する。ダリやマグリットが著名なアーティスト。"},
+      { label: "ポップアート",path: "Pop Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/a81b7725986c0bfe77b662267559e539.webp",note:"1950年代後半にアメリカで発展した芸術運動。大衆文化や日常の消費物を題材にし、明るく派手な色使いが特徴。ウォーホルやリヒテンシュタインが有名。"},
+      { label: "フォーヴィズム",path: "Fauvism",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/2bc7256be5aee362b98f4ada9cbb84cb.webp",note:"原色と大胆な筆致で感情を表す20世紀初頭の野獣派絵画様式。強烈な色彩が魅力。"},
+      { label: "アブストラクション",path: "Abstraction",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/9bfd042d986e722fecc820f64f4c896c.webp",note:"具体的な形状を持たない抽象的なイラストレーション。色彩や形、線の組み合わせによって感情や概念を表現する。"},
+      { label: "アブストラクト・スプラッター",path: "Abstract Splatter",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/dddc096fdaecea6a15fe0bb1017b36bf.webp",note:"抽象的なスプラッター模様。ペイントが飛び散ったようなデザインで、エネルギッシュでダイナミックな印象を与える。"},
+      { label: "スーパーリアリズム",path: "Super-realism",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/2c2035e882ac58528048154fbf50a030.webp",note:"写真のように細密でリアルな描写を追求する芸術運動。極端な写実性を持つ作品が特徴で、1970年代に盛んになった。"},
+      { label: "点描",path: "Pointillism",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/3de357001534a24080cca3061e132d30.webp",note:"小さな点を組み合わせて描く技法。色彩理論に基づき、点の集合によって色や形を表現する。スーラが代表的な画家。"},
+      { label: "ソーシャルリアリズム",path: "Social Realism",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/cc29823d6a6c73f6ce0ab7fddc86379d.webp",note:"社会問題や労働者の生活を描く芸術運動。20世紀初頭に広まり、社会的なメッセージを含む作品が特徴。"},
+      { label: "ミニマリズム",path: "Minimalism",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/3a7bc5e7b94cf228051b107990ad2af6.webp",note:"1960年代に始まった芸術運動。シンプルで無駄のないデザインを追求し、形や色を極限まで削ぎ落とすことが特徴。"},
+      { label: "ジャポニズム",path: "Japonism",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/897a7461a8ed43791a579f90c6ffbdaa.webp",note:"19世紀末から20世紀初頭にかけて西洋で流行した日本美術の影響。浮世絵や日本の工芸品にインスパイアされた芸術作品が生まれた。"},
+      { label: "オプ・アート",path: "Op Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/e3aa9c4ab3ed8e44f05f85f2a2e42484.webp",note:"視覚的な錯覚を利用した芸術運動。幾何学的なパターンや色のコントラストを用いて、動きや奥行きを感じさせる作品が特徴。"}
+    ],
+
+    /* ───────── 古典・歴史 ───────── */
+    "古典・歴史的美術": [
+      { label: "浮世絵",path: "Ukiyo-e",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/09b54db5a936811c6db090e98694ea13.webp",note:"日本の伝統的な木版画技法。江戸時代に流行し、風景や美人画、役者絵などが描かれた。鮮やかな色彩と繊細な線が特徴。"},
+      { label: "バロック",path: "Baroque",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/c120f018e2b9c29675b711f08721c8c5.webp",note:"17世紀から18世紀にかけてヨーロッパで流行した芸術様式。豪華で劇的な装飾が特徴。建築、絵画、音楽に広く影響を与えた。"},
+      { label: "ロココ",path: "Rococo",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/ef314529a39fc617b436bade20d20560.webp",note:"18世紀のフランスで発展した芸術様式。軽やかで優美な装飾が特徴。室内装飾や家具、絵画に影響を与えた。"},
+      { label: "ゴシックスタイル",path: "Gothic Style",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/0baa305c0ccee4ca844362bdd249fa95.webp",note:"中世ヨーロッパの建築様式。尖塔やステンドグラス、アーチ型の窓が特徴。ゴシック美術も含まれ、宗教的なテーマが多い。"},
+      { label: "アール・ヌーヴォー",path: "Art Nouveau",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/e26db41ecdb162ff3b928229950fbaee.webp",note:"19世紀末から20世紀初頭にかけて流行した装飾芸術。曲線的で植物や花のモチーフを多用し、建築や家具、ポスターなどに広く応用される。"},
+      { label: "アール・デコ",path: "Art Deco",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/fad814d36a6994084215fc615096e736.webp",note:"1920年代から30年代にかけて流行した装飾芸術。幾何学的なデザインと華麗な装飾が特徴。建築やインテリア、ファッションに影響を与えた。"},
+      { label: "ヴィンテージ",path: "Vintage",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/99e1565dcf4bb1114acf229a89ef32cb.webp",note:"彩度を抑えた色味と擦れた質感で古い印刷物の風合いを再現し、懐かしさを演出。"},
+      { label: "ファンタジー",path: "Fantasy",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/ce17c2678fe46e772e759debc37b2803.webp",note:"魔法や架空生物など非現実的要素を描く幻想アート。鮮やかな色彩と壮大な世界観が特徴。"},
+      { label: "切り絵アート",path: "Paper Cutout Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/fe055b8b230a73b1d68d0243e65a3816.webp",note:"紙を切り抜いて作るアート。繊細なデザインや立体的な表現が可能で、伝統的な民芸から現代アートまで幅広く応用される。"},
+      { label: "ペーパーアート",path: "Paper Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/1f5b33bb03d5d6970d08a3b5cd9e346c.webp",note:"紙を切ったり折ったりして作る立体的なアートスタイル。平面的な紙が、立体的な形状や奥行きを表現し、独特の質感と影を生み出す。"}
+    ],
+
+    /* ───────── グラフィック & パターン ───────── */
+    "グラフィックデザイン・装飾・パターン": [
+      { label: "サイバーパンク",path: "Cyberpunk",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/b9e5e434e3161f65fd6b5f2d38c42ab1.webp",note:"ネオン光と退廃的都市風景が交錯する近未来SFスタイル。高コントラストでテクノ感を演出。"},
+      { label: "企業向けメンフィススタイル",path: "Corporate Memphis",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/3540b87a31d80e7fa865da7d06252839.webp",note:"太線と平面形状、ポップな配色が特徴のモダンイラスト。企業資料やUIで多用。"},
+      { label: "アラベスク",path: "Arabesque",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/e17d70c589da5f77c675146d76e8500f.webp",note:"アラビアの伝統的な装飾デザイン。繰り返し模様や植物のモチーフが特徴で、建築や織物、陶器などに広く用いられる。"},
+      { label: "ポルカドット",path: "Polka Dots",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/34538a9abc739ba03bd96ac8a447a1c0.webp",note:"均等に配置された水玉模様。シンプルながら視覚的に魅力的で、ファッションやインテリアデザインに頻繁に使用される。"},
+      { label: "フローラル",path: "Floral",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/38cdb161f04e9984a07a6006686c1ac2.webp",note:"花をモチーフにしたパターン。自然の美しさを表現し、繊細なデザインから大胆なデザインまで多様なスタイルがある。"},
+      { label: "レオパードパターン",path: "Leopard Pattern",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/f74e60d237abcef82894f34a5001ecff.webp",note:"ヒョウの模様を模したパターン。野生的でエキゾチックな雰囲気が特徴で、ファッションやアクセサリーに人気がある。"},
+      { label: "ファッションアート",path: "Fashion Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/3ad37994a996cf119f397efaa4edac71.webp",note:"ファッションデザインやスタイルをテーマにしたアート。衣服やアクセサリーのデザインを描き、トレンドや美意識を表現する。"},
+      { label: "ポートレイトアート",path: "Portrait Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/45288817eda37586bb490aa22fb328e3.webp",note:"人物の肖像を描くアート。個人の特徴や感情を捉え、リアルな描写から抽象的な表現まで幅広いスタイルがある。"},
+      { label: "レゴアート",path: "Lego Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/da9c6508c00c110b8b1ed6b31936683c.webp",note:"レゴブロックを使ったアート。レゴを組み立てて作る作品で、ポップカルチャーのアイコンやオリジナルデザインが多く見られる。"},
+      { label: "ファンアート",path: "Fan Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/52700b17a4ba5edd161ae7fcb302c46c.webp",note:"映画、アニメ、ゲームなどのキャラクターやシーンを描いたアート。ファンによって制作され、愛情や創造力が込められている。"},
+      { label: "タトゥーアート",path: "Tattoo Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/e182b127c6ed356c80f670bdea8aa8ab.webp",note:"タトゥーデザイン。身体に永久的に彫られるアートで、個々のアイデンティティや文化的な意味が込められることが多い。"},
+      { label: "ファインアート",path: "Fine Art",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/6f0cad244bdf9376f4e7f97359b0ba8f.webp",note:"芸術的価値が高いとされる美術作品。絵画、彫刻、版画など、技術と表現力を重視した作品が含まれる。"}
+    ],
+
+    /* ───────── 著名な画家・アーティスト ───────── */
+    "著名な画家・アーティスト": [
+      { label: "レオナルド・ダ・ヴィンチ",path: "Leonardo da Vinci",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/08f675c500e1e038caa292b587c0427d.webp",note:"ルネサンス期のイタリアの芸術家。『モナ・リザ』や『最後の晩餐』で知られ、科学者や発明家としても活躍した。"},
+      { label: "エドガー・ドガ",path: "Edgar Degas",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/5fc4c1c40b2325b288902dc1fd53e520.webp",note:"フランスの印象派画家。バレリーナや馬のレースをテーマにした作品が多く、動きの表現に優れている。"},
+      { label: "アルフレッド・シスレー",path: "Alfred Sisley",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/964abbb063e4fb8b8e85128a8b97b4ec.webp",note:"フランスの印象派画家。風景画を得意とし、自然光の表現が特徴。"},
+      { label: "フィリップ・オトン・ルンゲ",path: "Philipp Otto Runge",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/dffa704b41578d9e816afeb9a38b4f2d.webp",note:"ドイツのロマン主義画家。『朝』や『夜』といった象徴的な作品で知られている。"},
+      { label: "ラデン・サレー",path: "Raden Saleh",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/9e49e910e6247526d9b3d4cdf6fa3070.webp",note:"インドネシアの画家。ロマン主義のスタイルで風景画や動物画を描いた。"},
+      { label: "ジョン・エヴァレット・ミレー",path: "John Everett Millais",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/fbefa1188e407d9f73ff86d4158bf137.webp",note:"イギリスのラファエル前派画家。『オフィーリア』などの代表作がある。"},
+      { label: "ビンセント・ファン・ゴッホ",path: "Vincent van Gogh",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/8f3b48f40a5534dd2f6a2d70a014e08a.webp",note:"オランダのポスト印象派画家。『星月夜』や『ひまわり』など、多くの名作を残した。"},
+      { label: "ミハイル・ヴルベリ",path: "Mikhail Vrubel",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/b5a9da25c981e5316be6eb85cd412b8b.webp",note:"ロシアの象徴主義画家。神話や宗教的なテーマを扱った幻想的な作品で知られる。"},
+      { label: "齊白石",path: "Qi Baishi",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/65cb35447d3c0b1ca5439f8e609c741d.webp",note:"中国の現代水墨画家。伝統的な技法とモダンな感覚を融合させた作品が特徴。"},
+      { label: "エドゥアール・マネ",path: "Édouard Manet",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/798277b4dbf890c2534063cd5cadd9cd.webp",note:"フランスの画家。印象派の先駆者として知られ、『草上の昼食』や『オランピア』が代表作。"},
+      { label: "ウィンスロー・ホーマー",path: "Winslow Homer",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/443aaae4e3a7a3ee1c055bf7110f2bde.webp",note:"フランスの画家。印象派の先駆者として知られ、『草上の昼食』や『オランピア』が代表作。"},
+      { label: "ニコラ・プッサン",path: "Nicolas Poussin",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/adc9779500d8368f6fd1421710db4045.webp",note:"フランスの古典主義画家。歴史画や宗教画を得意とし、構図の美しさが評価されている。"},
+      { label: "ジャン＝レオン・ジェローム",path: "Jean-Léon Gérôme",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/3eb23506381031704449fc402368fbb8.webp",note:"フランスのアカデミズム画家。歴史画や東洋の風景を描いた。"},
+      { label: "アンリ・ルソー",path: "Henri Rousseau",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/8646c06528d99e3dac969cb286c5b012.webp",note:"フランスのナイーブアートの画家。『夢見る人』などの幻想的な作品が特徴。"},
+      { label: "セルゲイ・パラジャーノフ",path: "Sergei Parajanov",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/98f9d272a9f926313ddfbcff0000d08f.webp",note:"アルメニアの映画監督・芸術家。映画『ザ・カラー・オブ・ポメグラネート』で知られ、独自の視覚スタイルを持つ。"},
+      { label: "歌川広重",path: "Utagawa Hiroshige",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/b2235da5b75f284f9c504364a71c561e.webp",note:"江戸時代の浮世絵師。『東海道五十三次』で知られ、風景画の名手。"},
+      { label: "ウィリアム・ターナー",path: "William Turner",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/fef612a860da06756383d1f5d5575e27.webp",note:"イギリスのロマン主義画家。光と色の表現が革新的で、『雨、蒸気、速度』などの名作がある。"},
+      { label: "ジェームズ・ホイッスラー",path: "James Whistler",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/fad864d14ff36a7c82ad0038e87ea2c2.webp",note:"アメリカの画家。『灰色と黒のアレンジメント：母の肖像』が有名で、音楽的なタイトルをつけた作品が多い。"},
+      { label: "ヨハネス・フェルメール",path: "Johannes Vermeer",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/ef5ef346490fc6eb65fdc2de15b6590f.webp",note:"オランダのバロック期画家。『真珠の耳飾りの少女』や『牛乳を注ぐ女』が代表作。"},
+      { label: "グスタフ・クリムト",path: "Gustav Klimt",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/93620885697053ca12b9d460190e155c.webp",note:"オーストリアの象徴主義画家。『接吻』などの装飾的でエロティックな作品が特徴。"},
+      { label: "ジャン・アントワーヌ・ワトー",path: "Jean-Antoine Watteau",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/5de31fecc99d0fc60a48bf5465972bc5.webp",note:"フランスのロココ期画家。優美な田園風景や恋愛をテーマにした作品が多い。"},
+      { label: "トーマス・ゲインズボロ",path: "Thomas Gainsborough",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/f67a3dbe4c31dc8c9e6fd896090eb50e.webp",note:"イギリスの肖像画家。『青い少年』などの作品で知られ、風景画も得意とした。"},
+      { label: "レンブラント",path: "Rembrandt",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/837d1139f74016cc85bb4094db606e6a.webp",note:"オランダのバロック期画家。『夜警』や『自画像』など、深い陰影と人間の感情を描いた作品が特徴。"},
+      { label: "ジョアン・ミロ",path: "Joan Miró",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/06d7ae18c627eaa3f3e447ee7040675a.webp",note:"スペインの抽象画家。シュルレアリズムの影響を受けた独自のスタイルで、色彩豊かな作品が多い。"},
+      { label: "ジャン＝バティスト・カミーユ・コロー",path: "Jean-Baptiste Camille Corot",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/236c1efcaa6e2a02269a503eba10e2be.webp",note:"フランスの風景画家。印象派の先駆者とされ、自然の風景を詩情豊かに描いた。"},
+      { label: "狩野永徳",path: "Kano Eitoku",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/b1b1e1a8145e8d9bb3f63ffef01c912d.webp",note:"日本の安土桃山時代の画家。屏風絵や襖絵で知られ、力強い筆致が特徴。"},
+      { label: "シャルル・ドミニク・アングル",path: "Charles Dominique Ingres",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/41f4d3d3bb07259f3791fd75f2c4ae55.webp",note:"フランスの新古典主義画家。『大使の肖像』や『トルコ風呂』など、正確でエレガントな描写が特徴。"},
+      { label: "ヨハン・ハインリヒ・フュースリー",path: "Johann Heinrich Füssli",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/e76531f24549977145f815b6fb51527a.webp",note:"スイス出身のロマン主義画家。幻想的なテーマを描き、『夢魔』が代表作。"},
+      { label: "ギュスターヴ・クールベ",path: "Gustave Courbet",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/66b51452cd097a2aaf4964a714a15a64.webp",note:"写実主義を牽引し、農民や労働者の日常を大胆な筆致で描き、社会の現実を露わにした。"},
+      { label: "ヘンリエット・ロンドン",path: "Henriette Ronner-Knip",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/eb9217cb4d3fd6eb931a874f678a8e3b.webp",note:"オランダの画家。猫をテーマにした作品で知られ、愛らしい描写が特徴。"},
+      { label: "ラファエロ",path: "Raphael",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/87902cdd4582ff4c2a5a141ed08cb878.webp",note:"ルネサンス期のイタリアの画家。『アテネの学堂』や多くの聖母子像が代表作。"},
+      { label: "カラヴァッジョ",path: "Caravaggio",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/66c1f9bf1399d2f9778fc6267b3bf141.webp",note:"イタリアのバロック期画家。劇的な明暗法とリアルな人物描写が特徴で、『聖マタイの召命』などが有名。"},
+      { label: "ジョット",path: "Giotto",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/2d4d49614da57fcdae87efa344044848.webp",note:"イタリアのルネサンス初期の画家。『アッシジの聖フランチェスコの生涯』や『スクロヴェーニ礼拝堂のフレスコ画』が代表作。"},
+      { label: "張大千",path: "Zhang Daqian",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/197cdd15b7f6e742d66e80246689e084.webp",note:"中国の現代画家。伝統的な水墨画と西洋の技法を融合させた独自のスタイルで、多彩な作品を残した。"},
+      { label: "ジャン＝フランソワ・ミレー",path: "Jean-François Millet",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/90aeacba64e24a4d3699898563a93ed8.webp",note:"フランスのバルビゾン派画家。農民の生活を描いた作品が多く、『落穂拾い』が有名。"},
+      { label: "アルベルト・デュラー",path: "Albrecht Dürer",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/1eeb424e83bc4f4c8877e817f1e75034.webp",note:"ドイツのルネサンス期画家。版画や素描の名手で、『若き兎』や『メランコリアⅠ』などが代表作。"},
+      { label: "ウィリアム・アドルフ・ブグロー",path: "William-Adolphe Bouguereau",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/c2b1810150aad5766a59346f5a145a79.webp",note:"フランスのアカデミズム画家。繊細で美しい描写が特徴で、『海からのビーナス』などが代表作。"},
+      { label: "ジャン＝バティスト・シメオン・シャルダン",path: "Jean-Baptiste-Siméon Chardin",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/63d029fd262c7cfbeb5599fe588b04b0.webp",note:"フランスの静物画家。日常生活の静物や人物を描いた作品が多く、自然な美しさが特徴。"},
+      { label: "ピエール＝ポール・プラドン",path: "Pierre-Paul Prud'hon",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/cb7beb68b75d41f99df9ae0a7c686f1b.webp",note:"フランスの新古典主義画家。優雅でロマンティックな描写が特徴で、ナポレオンの肖像画などがある。"},
+      { label: "フリードリヒ・オーフェルベック",path: "Friedrich Overbeck",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/ec87a76663011f6327cfac8a09159f70.webp",note:"ドイツのナザレ派画家。宗教的なテーマを多く描き、古典的なスタイルを持つ。"},
+      { label: "カスパー・ダーヴィッド・フリードリヒ",path: "Caspar David Friedrich",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/1ae066fff17bf287015c3ae37b1cad9c.webp",note:"ドイツのロマン主義画家。壮大な自然景観を描き、『霧の中の放浪者』が有名。"},
+      { label: "フェルディナンド・ヴォルダス",path: "Ferdinand Waldmüller",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/1dfebec72ab2fd6b1693a5b61182a4e1.webp",note:"オーストリアの写実主義画家。風景画や肖像画を得意とし、自然の美しさを忠実に描いた。"},
+      { label: "トマ・クチュール",path: "Thomas Couture",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/2abac31cf9d8db9700b96792b47498b4.webp",note:"フランスの画家。歴史画や肖像画を多く描き、『ローマの堕落』が代表作。"},
+      { label: "ジャン＝バティスト・グルーズ",path: "Jean-Baptiste Greuze",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/fddb1b92f5ad3f989c1257ad169c84bb.webp",note:"フランスの画家。感情豊かな人物描写が特徴で、『村の花嫁』などが有名。"},
+      { label: "カール・フィリップ・フェーリックス・フォン・シュヴィント",path: "Carl Philipp Fohr",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/8c030aad7efd95ba7b9455975bbdd809.webp",note:"ドイツのロマン主義画家。風景画や歴史画を描いた。"},
+      { label: "エリーザベト・ルドヴィカ・ヴィゲ・ルブラン",path: "Élisabeth Louise Vigée Le Brun",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/c22c7820f2e48b104ea0e877d936fcfb.webp",note:"フランスの肖像画家。マリー・アントワネットの公式肖像画家として知られ、優美な肖像画を多く残した。"},
+      { label: "フランソワ・ボシェ",path: "François Boucher",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/a34f822a95666a8e9e68d56115c418d4.webp",note:"フランスのロココ期画家。神話や田園風景をテーマにした作品が多く、装飾的で華やかなスタイルが特徴。"},
+      { label: "ジョン・コンスタブル",path: "John Constable",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/d34e381c00692c81878857fd5609c5ef.webp",note:"イギリスの風景画家。『乾草の車』など、自然の風景を詩情豊かに描いた。"},
+      { label: "ハッサン・マッソウディ",path: "Hassan Massoudy ",image: "https://ryusei-komada.com/wp-content/uploads/2024/05/4a31a22654674cd730d5e7e74b7a8782.webp",note:"イラクのカリグラフィーアーティスト。伝統的なアラビア文字を現代的なアートに昇華させた。"}
+    ]
+  }
+};
+
+/* ───────── セクション並び順定数 ───────── */
+const sectionOrder = ["aspect_ratio","reference_match","color","text_overlay","scene","composition","art_style"];
+/* ───────── 共通挿入ユーティリティ ───────── */
+function insertSection(h3Elem, cardElem, anchor){
+  const parent = document.querySelector(".left-panel");
+  if(anchor){
+    parent.insertBefore(h3Elem, anchor);
+    parent.insertBefore(cardElem, anchor);
+  }else{
+    parent.appendChild(h3Elem);
+    parent.appendChild(cardElem);
+  }
+}
+
+function reorderSections(){
+  const parent = document.querySelector(".left-panel");
+  sectionOrder.forEach(sec=>{
+    const card = document.getElementById("section-"+sec);
+    if(card){
+      const h3 = card.previousElementSibling;
+      parent.appendChild(h3);
+      parent.appendChild(card);
+    }
+  });
+}
+
+/* ========== addSection (text_overlay + scene + composition + art_style) ========== */
+function addSection(k){
+  const toggleBtn = document.querySelector('#sectionList .add-btn[data-section="'+k+'"]');
+  const existingCard = document.getElementById("section-" + k);
+  if (existingCard) {
+    const header = existingCard.previousElementSibling;
+    const hidden = existingCard.style.display === "none";
+
+    if (hidden) {            /* ── ON: 再表示 ── */
+      existingCard.style.display = "";
+      if(header) header.style.display = "";
+      if(toggleBtn) toggleBtn.classList.add("active");
+    } else {                 /* ── OFF: 非表示 ── */
+      existingCard.style.display = "none";
+      if(header) header.style.display = "none";
+      if(toggleBtn) toggleBtn.classList.remove("active");
+    }
+      // 見出し追従を即時更新
+      updateTutorialVisibility();
+      document.dispatchEvent(new Event("sectionAdded"));
+    return;  // DOM を残すので値は保持
+  }
+
+  // ★ 基本の挿入位置 … カラーカードの直後
+  const colorH3   = [...document.querySelectorAll(".left-panel h3")]
+                     .find(el => el.textContent.trim() === "カラー");
+  const colorCard = colorH3 ? colorH3.nextElementSibling : null;
+  let   anchor    = colorCard ? colorCard.nextSibling : (colorH3 ? colorH3.nextSibling : null);
+
+  // すでにアートスタイル見出しがあれば、その直前
+  const artH3 = [...document.querySelectorAll(".left-panel h3")]
+                 .find(el => el.textContent.trim() === "アートスタイル");
+  if(artH3) anchor = artH3;
+
+  /** ───────── 挿入テキスト ───────── */
+  if(k === "text_overlay"){
+    const h3   = document.createElement("h3");
+    h3.textContent = "挿入テキスト";
+
+    const card = document.createElement("div");
+    card.className = "section";
+    card.id = "section-text_overlay";
+
+    const wrap = document.createElement("div");
+    wrap.className = "indent";
+
+    const ta = document.createElement("textarea");
+    ta.style.width  = "90%";
+    ta.style.height = "4em";
+    ta.placeholder  = "例：セリフやキャプションをここに";
+    ta.setAttribute("data-yamlpath","image_prompt.text_overlay.text_content");
+
+    wrap.appendChild(ta); card.appendChild(wrap);
+    insertSection(h3, card, anchor);
+  }
+
+  /** ───────── 設定・シーン ───────── */
+  else if(k === "scene"){
+    const h3   = document.createElement("h3");
+    h3.textContent = "設定・シーン";
+
+    const card = document.createElement("div");
+    card.className = "section";
+    card.id = "section-scene";
+
+    const wrap = document.createElement("div");
+    wrap.className = "indent";
+
+    const ta = document.createElement("textarea");
+    ta.style.width  = "90%";
+    ta.style.height = "4em";
+    ta.placeholder  = "例：南国のビーチで海風に吹かれながら穏やかに読書";
+    ta.setAttribute("data-yamlpath","image_prompt.scene.situation_description");
+
+    wrap.appendChild(ta); card.appendChild(wrap);
+    insertSection(h3, card, anchor);
+  }
+
+  /** ───────── 構図 ───────── */
+  else if(k === "composition"){
+    const h3   = document.createElement("h3");
+    h3.textContent = "構図";
+
+    const card = document.createElement("div");
+    card.className = "section";
+    card.id = "section-composition";
+
+    const wrap = document.createElement("div");
+    wrap.className = "indent"; card.appendChild(wrap);
+
+    dataMap.composition.forEach(it=>{
+      const lb = document.createElement("label");
+      lb.style.display="flex";lb.style.alignItems="center";lb.style.gap="8px";
+      lb.innerHTML = `
+        <input type="checkbox" data-yamlpath="image_prompt.composition.${it.path}">
+        <span>${it.label}</span>
+        <img src="${it.image}" class="composition-image">
+      `;
+      wrap.appendChild(lb);
+    });
+
+    insertSection(h3, card, anchor);
+  }
+
+  /* ---------- 縦横比 ---------- */
+else if(k === "aspect_ratio"){
+  const h3 = document.createElement("h3");
+  h3.textContent = "縦横比";
+
+  const card = document.createElement("div");
+  card.className = "section";
+  card.id = "section-aspect_ratio";
+
+  card.innerHTML = `
+    <div class="checkbox-list indent">
+      <label><input type="checkbox" data-yamlpath="image_prompt.aspect_ratio.square">正方形</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.aspect_ratio.landscape">横長</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.aspect_ratio.portrait">縦長</label>
+    </div>
+  `;
+  insertSection(h3, card, anchor);
+}
+
+/* ---------- 参照画像との一致 ---------- */
+else if(k === "reference_match"){
+  const h3 = document.createElement("h3");
+  h3.textContent = "参照画像との一致";
+
+  const card = document.createElement("div");
+  card.className = "section";
+  card.id = "section-reference_match";
+
+  const container = document.createElement("div");
+  container.className = "indent";
+  container.id = "uploaded_reference_matching";
+  container.innerHTML = `
+    <div><strong>画像1枚目</strong></div>
+    <div class="checkbox-list indent" style="margin-top:4px;">
+      <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[0].match_uploaded_style">画風・タッチ</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[0].match_uploaded_composition">構図（構成）</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[0].match_uploaded_face">顔の特徴</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[0].match_uploaded_hair">髪型・髪色</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[0].match_uploaded_clothing">衣装・アクセサリー</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[0].match_uploaded_pose">ポーズ・手の位置</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[0].match_uploaded_lighting">光と影の演出</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[0].match_uploaded_background">背景のテイスト</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[0].match_uploaded_mood">表情や感情の雰囲気</label>
+    </div>`;
+  const btn = document.createElement("button");
+  btn.id = "addReferenceImage";
+  btn.className = "btn";
+  btn.style.marginTop=".8em";
+  btn.textContent="参照画像を追加";
+  container.appendChild(btn);
+  card.appendChild(container);
+
+    insertSection(h3, card, anchor);
+}
+
+/* ---------- カラー ---------- */
+else if(k === "color"){
+  const h3 = document.createElement("h3");
+  h3.textContent = "カラー";
+
+  const card = document.createElement("div");
+  card.className = "section";
+  card.id = "section-color";
+
+  card.innerHTML = `
+    <div class="checkbox-list indent">
+      <label><input type="checkbox" data-yamlpath="image_prompt.color.colored">色付き</label>
+      <label><input type="checkbox" data-yamlpath="image_prompt.color.monochrome">白黒</label>
+    </div>
+  `;
+  insertSection(h3, card, anchor);
+}
+
+  /** ───────── アートスタイル ───────── */
+  else if(k === "art_style"){
+    const h3   = document.createElement("h3");
+    h3.textContent = "アートスタイル";
+
+    const card = document.createElement("div");
+    card.className = "section";
+    card.id = "section-art_style";
+
+/* ───────── アートスタイル ───────── */
+Object.entries(dataMap.art_style).forEach(([cat, list]) => {
+  /* ―― h4 見出し ――――――――――――――――― */
+  const h4 = document.createElement("h4");
+  h4.textContent = cat;
+  h4.classList.add("toggleable");      // make it collapsible
+  card.appendChild(h4);                // カード直下に見出しを追加
+
+  /* ―― チェックボックス群 ――――――――― */
+  const wrap = document.createElement("div");
+  wrap.className = "checkbox-list indent";
+  wrap.style.display = "none";         // start collapsed
+
+  list.forEach(it => {
+    const lb = document.createElement("label");
+    lb.style.display      = "flex";
+    lb.style.alignItems   = "center";
+    lb.style.gap          = "8px";
+    lb.innerHTML = `
+      <input type="checkbox" data-yamlpath="image_prompt.art_style.${it.path}">
+      <span style="width:450px;display:inline-block;">${it.label}</span>
+      <img src="${it.image}" class="composition-image">
+    `;
+    wrap.appendChild(lb);
+  });
+
+  card.appendChild(wrap);          // 見出しの下にコンテンツを配置
+  /* click to toggle this category */
+  h4.addEventListener("click", () => {
+    const opened = wrap.style.display !== "none";
+    wrap.style.display = opened ? "none" : "";
+    h4.classList.toggle("open", !opened);
+  });
+});
+
+    const compCard = document.getElementById("section-composition");
+    const point    = compCard ? compCard.nextSibling : anchor;
+    insertSection(h3, card, point);
+  }
+  if(toggleBtn) toggleBtn.classList.add('active');
+  reorderSections();
+  updateTutorialVisibility();
+
+  /* 動的見出しを sticky 対象に含めるため発火 */
+  document.dispatchEvent(new Event("sectionAdded"));
+}
+document.querySelectorAll("#sectionList .add-btn")
+        .forEach(btn=>btn.onclick=()=>addSection(btn.dataset.section));
+        updateTutorialVisibility();   // 初期表示
+
+// ★ REF‑MATCH LOGIC START : 参照画像セクション動的追加
+let dynamicReferenceCount = 0;  // 画像1枚目は固定済み
+
+document.addEventListener("click", (e)=>{
+  if(e.target && e.target.id==="addReferenceImage"){
+    dynamicReferenceCount++;
+    const tpl = `
+      <div><strong>画像${dynamicReferenceCount + 1}枚目</strong></div>
+      <div class="checkbox-list indent" style="margin-top:4px;">
+        <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[${dynamicReferenceCount}].match_uploaded_style">画風・タッチ</label>
+        <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[${dynamicReferenceCount}].match_uploaded_composition">構図（構成）</label>
+        <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[${dynamicReferenceCount}].match_uploaded_face">顔の特徴</label>
+        <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[${dynamicReferenceCount}].match_uploaded_hair">髪型・髪色</label>
+        <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[${dynamicReferenceCount}].match_uploaded_clothing">衣装・アクセサリー</label>
+        <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[${dynamicReferenceCount}].match_uploaded_pose">ポーズ・手の位置</label>
+        <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[${dynamicReferenceCount}].match_uploaded_lighting">光と影の演出</label>
+        <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[${dynamicReferenceCount}].match_uploaded_background">背景のテイスト</label>
+        <label><input type="checkbox" data-yamlpath="image_prompt.uploaded_reference_matching.reference_images[${dynamicReferenceCount}].match_uploaded_mood">表情や感情の雰囲気</label>
+      </div>`;
+    const container = document.getElementById("uploaded_reference_matching");
+    const div = document.createElement("div");
+    div.innerHTML = tpl.trim();
+    container.insertBefore(div, document.getElementById("addReferenceImage"));
+  }
+});
+// ★ REF‑MATCH LOGIC END
+
+/* ========== YAML 生成ロジック (file2 そのまま) ========== */
+function generateYaml(){
+ const lines=["Generate an image with this prompt:"],tree={},inputs=document.querySelectorAll("input[data-yamlpath],textarea[data-yamlpath]");
+ inputs.forEach(inp=>{
+   const p = inp.dataset.yamlpath.split("."), last = p.pop(); let cur = tree;
+   p.forEach(seg=>{
+     if(seg.includes("[")){
+       const [n, i] = seg.replace("]","").split("[");
+       cur[n] = cur[n] || [];
+       cur[n][i] = cur[n][i] || {};
+       cur = cur[n][i];
+     } else {
+       cur[seg] = cur[seg] || {};
+       cur = cur[seg];
+     }
+   });
+   if(inp.type==="checkbox"){
+     if(inp.checked) cur[last] = true;
+   } else if(inp.value.trim()){
+     cur[last] = inp.value.trim();
+   }
+ });
+  /* ----- art_style: convert selected checkboxes to [{name, note}] ----- */
+  if (tree.image_prompt && tree.image_prompt.art_style) {
+    const selectedStyles = Object.keys(tree.image_prompt.art_style)
+      .filter(key => tree.image_prompt.art_style[key] === true);
+    tree.image_prompt.art_style = selectedStyles.map(name => {
+      // dataMap.art_style は複数カテゴリに分かれているのでフラット化して検索
+      const found = Object.values(dataMap.art_style)
+                     .flat()
+                     .find(it => it.path === name);
+      return { name, note: found?.note ?? "" };
+    });
+  }
+  /* ----- composition: convert selected checkboxes to [{name, note}] ----- */
+  if (tree.image_prompt && tree.image_prompt.composition) {
+    const selectedComps = Object.keys(tree.image_prompt.composition)
+      .filter(key => tree.image_prompt.composition[key] === true);
+    tree.image_prompt.composition = selectedComps.map(name => {
+      const found = dataMap.composition.find(it => it.path === name);
+      return { name, note: found?.note ?? "" };
+    });
+  }
+  const build = (o, l) => {
+    const ind = "  ".repeat(l);
+    let arr = [];
+    if (Array.isArray(o)) {
+      o.forEach((v, i) => {
+        /* Special case: objects with name/note (art_style) */
+        if (typeof v === "object" && v !== null && Object.prototype.hasOwnProperty.call(v, "name")) {
+          arr.push(`${ind}- name: ${v.name}`);
+          arr.push(`${ind}  note: "${v.note || ""}"`);
+        } else {
+          const c = build(v, l + 1);
+          if (c.length) {
+            arr.push(ind + `- # ref${i + 1}`);
+            arr = arr.concat(c);
+          }
+        }
+      });
+    }
+    else {
+      Object.keys(o).forEach(k=>{
+        const v = o[k];
+        if(v===true) arr.push(`${ind}- ${k}`);
+        else if(typeof v==="string") arr.push(`${ind}${k}: "${v}"`);
+        else {
+          const c = build(v, l+1);
+          if(c.length){
+            arr.push(`${ind}${k}:`);
+            arr = arr.concat(c);
+          }
+        }
+      });
+    }
+   return arr;
+ };
+ if(tree.image_prompt)lines.push(...build(tree.image_prompt,1));
+ document.getElementById("output").value=lines.join("\n")||"Generate an image with this prompt:";
+}
+document.getElementById("generateBtn").onclick=generateYaml;
+
+/* コピー */
+document.getElementById("copyBtn").onclick=()=>{
+ const txt=document.getElementById("output").value;if(!txt)return;
+ navigator.clipboard.writeText(txt).then(()=>{
+   const btn=document.getElementById("copyBtn"),old=btn.textContent;btn.textContent="コピー済み!";
+   setTimeout(()=>btn.textContent=old,2000);
+ });
+};
+/* 全クリア */
+document.getElementById("clearBtn").onclick = () => {
+  document
+    .querySelectorAll("input[data-yamlpath],textarea[data-yamlpath]")
+    .forEach(el => {
+      if (el.type === "checkbox") el.checked = false;
+      else el.value = "";
+    });
+  document.getElementById("output").value = "";
+};
+
+/* フローティング */
+document.getElementById("floatingGenerateBtn").onclick=()=>{
+ document.getElementById("generateBtn").click();
+ document.getElementById("output").scrollIntoView({behavior:"smooth"});
+};
+
+/* ── 見出し追従 (動的セクション対応) ── */
+(function () {
+  const fix = document.getElementById("sticky-header");
+
+  /* 対象となる見出しを取得（非表示のものは除外） */
+  function getHeads () {
+    return Array
+      .from(document.querySelectorAll(".left-panel h2, .left-panel h3, .left-panel h4"))
+      .filter(h => h.offsetParent !== null);       // display:none 等で不可視の要素は無視
+  }
+
+  function update() {
+    const y = window.scrollY + fix.offsetHeight + 10;
+    let active = null;
+
+    getHeads().forEach((h) => {
+      const top = h.getBoundingClientRect().top + window.scrollY;
+      if (top <= y) active = h;
+    });
+
+    if (active) {
+      fix.textContent = active.textContent;
+      fix.style.display = "block";
+    } else {
+      fix.style.display = "none";
+    }
+  }
+
+  /* スクロール・リサイズ・新セクション追加で更新 */
+  window.addEventListener("scroll", update);
+  window.addEventListener("resize", update);
+  document.addEventListener("sectionAdded", update);
+
+  update();
+})();
+
+
+</script>
+</body>
+</html>
