@@ -3,6 +3,8 @@
 [![Last Commit](https://img.shields.io/github/last-commit/ryusei-blog/image-yaml-prompt-builder.svg)](../../commits/main)
 [![Stars](https://img.shields.io/github/stars/ryusei-blog/image-yaml-prompt-builder?style=social)](../../stargazers)
 
+**English README** | 🇯🇵 **[日本語はこちら](README.ja.md)**
+
 **Visual YAML-prompt composer for AI image generation** — **HTML-first** for instant use, with an *optional* WordPress/PHP template.
 
 ---
