@@ -23,7 +23,7 @@ Just grab **`index.html`** and open it—no build tools, no server.
 ```bash
 git clone https://github.com/ryusei-blog/image-yaml-prompt-builder.git
 cd image-yaml-prompt-builder
-open index.html          # macOS (or double-click in Explorer/Finder)
+open index.html
 ```
 
 It runs on any modern browser.  
