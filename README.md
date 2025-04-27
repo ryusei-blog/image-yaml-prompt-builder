@@ -18,21 +18,17 @@
 
 ---
 
-## 🚀 Quick Start (HTML)
+## 🚀 Quick Start
 
-Just grab **`index.html`** and open it—no build tools, no server.
+### 🌐 Live Demo
+Feel free to play with the tool online:  
+https://ryusei-blog.github.io/image-yaml-prompt-builder/
 
+### 🛠️ Optional: Run locally
 ```bash
 git clone https://github.com/ryusei-blog/image-yaml-prompt-builder.git
 cd image-yaml-prompt-builder
-open index.html
-```
-
-It runs on any modern browser.  
-Need a live link? Deploy the folder to **GitHub Pages, Netlify, Vercel**—no backend required.
-
-### 🌐 Live Demo
-Try it 👉 https://ryusei-blog.github.io/image-yaml-prompt-builder/
+open index.html   # macOS (Windows/Linux: double-click the file)
 
 ---
 
