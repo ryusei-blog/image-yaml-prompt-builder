@@ -25,6 +25,9 @@ cp image-yaml-prompt-builder.php /path/to/wp-content/themes/your-theme/
 # visit https://your-site.com/image-yaml-prompt-builder/
 ```
 
+### 🌐 Live Demo
+Try it 👉 https://ryusei-blog.github.io/image-yaml-prompt-builder/
+
 ### Stand-alone PHP
 ```bash
 php -S localhost:8080
