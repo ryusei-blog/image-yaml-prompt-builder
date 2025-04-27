@@ -28,7 +28,7 @@ https://ryusei-blog.github.io/image-yaml-prompt-builder/
 ```bash
 git clone https://github.com/ryusei-blog/image-yaml-prompt-builder.git
 cd image-yaml-prompt-builder
-open index.html   # macOS (Windows/Linux: double-click the file)
+open index.html
 
 ---
 
