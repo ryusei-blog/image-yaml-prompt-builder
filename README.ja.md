@@ -16,21 +16,22 @@
 
 ---
 
-## 🚀 クイックスタート（HTML）
+## 🚀 クイックスタート
 
-**`index.html` を開くだけ** で動きます。サーバーやビルドは不要です。
+### 🌐 ライブデモ（1 クリック）
+https://ryusei-blog.github.io/image-yaml-prompt-builder/  
+ブラウザで開くだけで即利用できます（インストール不要）。
+
+### 🛠️ ローカルで実行（任意）
 
 ```bash
 git clone https://github.com/ryusei-blog/image-yaml-prompt-builder.git
 cd image-yaml-prompt-builder
-open index.html
+open index.html     # macOS の場合。Windows / Linux は index.html をダブルクリック
 ```
 
-ほぼ全てのモダンブラウザで動作します。  
-GitHub Pages や Netlify、Vercel へアップロードすればオンライン公開も簡単です。
-
-### 🌐 ライブデモ  
-https://ryusei-blog.github.io/image-yaml-prompt-builder/
+> Node やビルドツールは不要。ほぼすべてのモダンブラウザで動作します。  
+> オンライン公開したい場合は **GitHub Pages / Netlify / Vercel** へフォルダをアップロードするだけです。
 
 ---
 
