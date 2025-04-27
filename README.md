@@ -3,7 +3,7 @@
 [![Last Commit](https://img.shields.io/github/last-commit/ryusei-blog/image-yaml-prompt-builder.svg)](../../commits/main)
 [![Stars](https://img.shields.io/github/stars/ryusei-blog/image-yaml-prompt-builder?style=social)](../../stargazers)
 
-**Visual YAML-prompt composer for AI image generation** — pure PHP & vanilla JS, theme-agnostic for WordPress or standalone use.
+**Visual YAML-prompt composer for AI image generation** — **HTML-first** for instant use, with an *optional* WordPress/PHP template.
 
 ---
 
@@ -16,25 +16,37 @@
 
 ---
 
-## 🚀 Quick Start
-### WordPress Template
+## 🚀 Quick Start (HTML)
+
+Just grab **`index.html`** and open it—no build tools, no server.
+
 ```bash
 git clone https://github.com/ryusei-blog/image-yaml-prompt-builder.git
-# copy the template file into your active theme folder
-cp image-yaml-prompt-builder.php /path/to/wp-content/themes/your-theme/
-# visit https://your-site.com/image-yaml-prompt-builder/
+cd image-yaml-prompt-builder
+open index.html          # macOS (or double-click in Explorer/Finder)
 ```
+
+It runs on any modern browser.  
+Need a live link? Deploy the folder to **GitHub Pages, Netlify, Vercel**—no backend required.
 
 ### 🌐 Live Demo
 Try it 👉 https://ryusei-blog.github.io/image-yaml-prompt-builder/
 
-### Stand-alone PHP
+---
+
+## 🖥️ WordPress Integration (optional)
+
+Want to embed the tool in a WordPress site?
+
 ```bash
-php -S localhost:8080
-# open http://localhost:8080/image-yaml-prompt-builder.php
+# inside your theme folder (e.g. /wp-content/themes/affinger/)
+mkdir template
+cp wp-template/image-yaml-prompt-builder.php template/
+
+# create a new page in WP admin and choose this template
 ```
 
-No additional dependencies — works on any server running **PHP 7.4+**.
+The PHP file wraps the same HTML/JS so you can keep WP headers, footers, SEO plugins, etc.
 
 ---
 
@@ -43,29 +55,29 @@ No additional dependencies — works on any server running **PHP 7.4+**.
 |-------------|--------------|-------------|
 | ![full-ui](https://ryusei-komada.com/wp-content/uploads/2025/04/4959873bc5667520cb27ac817a33504a.webp) | ![yaml](https://ryusei-komada.com/wp-content/uploads/2025/04/0b8d9f2c0f5369e0ff8a982deec41103.webp) | ![mobile](https://ryusei-komada.com/wp-content/uploads/2025/04/c98615228f9320929b3c62bbd084b909.webp) |
 
-Additional screenshots:
-- Dynamic section buttons:  
-  ![section-buttons](https://ryusei-komada.com/wp-content/uploads/2025/04/92213c79f33afe093d58edbe2610667a.webp)
-- Side-by-side panel layout:  
-  ![ui-structure](https://ryusei-komada.com/wp-content/uploads/2025/04/98836661ee3b79a65964aba13c977d93.webp)
-- Tutorial overlay:  
-  ![tutorial](https://ryusei-komada.com/wp-content/uploads/2025/04/adc9c585b6087881f0ce79af7cd8b4f9.webp)
-- Sticky heading on scroll:  
+Additional screenshots  
+- Dynamic section buttons  
+  ![section-buttons](https://ryusei-komada.com/wp-content/uploads/2025/04/92213c79f33afe093d58edbe2610667a.webp)  
+- Side-by-side panel layout  
+  ![ui-structure](https://ryusei-komada.com/wp-content/uploads/2025/04/98836661ee3b79a65964aba13c977d93.webp)  
+- Tutorial overlay  
+  ![tutorial](https://ryusei-komada.com/wp-content/uploads/2025/04/adc9c585b6087881f0ce79af7cd8b4f9.webp)  
+- Sticky heading on scroll  
   ![sticky-title](https://ryusei-komada.com/wp-content/uploads/2025/04/120db295a75477a874093ea921208575.webp)
 
 ---
 
 ## 🤖 Supported Models
 - **Primary**: ChatGPT-4o Image Generation  
-- **Compatible**: any AI image service that accepts YAML prompts (e.g., SDXL, custom diffusion back-ends)
+- **Compatible**: any AI image service that accepts YAML prompts (e.g. SDXL, custom diffusion back-ends)
 
 ---
 
 ## 🗺️ Roadmap
 - [ ] **Live YAML Render** — update preview in real time as you type  
 - [ ] Continually expand **Art Styles** / **Compositions**  
-- [ ] **Negative Prompt** field  
-- [ ] **Logic Flags** (e.g., experimental prompt directives)
+- [ ] **Negative Prompt** input  
+- [ ] **Logic Flags** (e.g. experimental directives)
 
 Feel free to open Issues or PRs for feature requests!
 
@@ -73,7 +85,7 @@ Feel free to open Issues or PRs for feature requests!
 
 ## 🤝 Contributing
 1. `git clone` & open in your favourite editor  
-2. Run the built-in PHP server for local testing  
+2. Simply open **index.html** or run `php -S localhost:8080` for PHP tests  
 3. Follow **Conventional Commits** (`feat:`, `fix:`, `docs:` …) when opening PRs
 
 ---
