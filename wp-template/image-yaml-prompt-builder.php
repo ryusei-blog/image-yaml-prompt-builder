@@ -863,14 +863,23 @@ function generateYaml(){
       Object.keys(o).forEach(k=>{
         const v = o[k];
         if(v===true) arr.push(`${ind}- ${k}`);
-        else if(typeof v==="string") arr.push(`${ind}${k}: "${v}"`);
-        else {
-          const c = build(v, l+1);
-          if(c.length){
-            arr.push(`${ind}${k}:`);
-            arr = arr.concat(c);
-          }
-        }
+        else if (typeof v === "string") {
+  if (v.includes("\n")) {
+    // 改行を含む場合は YAML ブロックリテラル形式で出力
+    arr.push(`${ind}${k}: |`);
+    v.split(/\r?\n/).forEach(line => {
+      arr.push(`${ind}  ${line}`);
+    });
+  } else {
+    arr.push(`${ind}${k}: "${v}"`);
+  }
+} else {
+  const c = build(v, l + 1);
+  if (c.length) {
+    arr.push(`${ind}${k}:`);
+    arr = arr.concat(c);
+  }
+}
       });
     }
    return arr;
